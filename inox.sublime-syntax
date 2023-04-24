@@ -1,0 +1,246 @@
+%YAML 1.2
+---
+name: inox
+file_extensions: [ix]
+scope: source.inox
+
+# The syntax definitions in this file are not optimal & a bit hacky.
+# Better syntax highlighting will be provided thanks to the Inox LSP.
+
+contexts:
+  main:
+    # keywords
+    - match: \s*\b(if|else|switch|match|for|walk|in|return|break|continue|prune|go|do|lifetimejob|assert|comp|testsuite|testcase|on|received)\b
+      captures:
+        1: keyword.control.inox
+      push:
+        - match: (?=.*)
+          pop: true
+
+    - match: \s*\b(manifest|drop-perms|import|allow|as|const|var|assign|args|Mapping|udata|concat|supersys|self|fn)\b
+      captures:
+        1: keyword.context.inox
+      push:
+      - match: (?=.*)
+        pop: true
+
+    # function calls
+    - match: (?=\b([a-zA-Z_][a-zA-Z0-9_-]*!?)(\())
+      push: parenthesized-call
+
+    - match: \b([a-zA-Z][a-zA-Z0-9_-]*)\"
+      captures:
+        1: variable.function.inox
+      push: string
+
+    - match: \b([a-zA-Z][a-zA-Z0-9_-]*)(?=\{)
+      captures:
+        1: variable.function.inox
+      push: object
+
+    - match: (?=(?:^|\|)[ \t]*([a-zA-Z_][a-zA-Z0-9_-]*)[ \t]+[^=\s])
+      push: unparenthesized-call
+
+    - match: (?=(?:^|\|)[ \t]*([a-zA-Z0-9_.-]+\.)([a-zA-Z][a-zA-Z0-9_-]*)[ \t]+([^=]|$))
+      push: unparenthesized-call
+
+    # strings
+    - match: '"'
+      push: string
+
+    # runes
+    - match: "'"
+      push: rune
+
+    # url patterns
+
+    - match: \%[a-zA-Z][-a-zA-Z0-9+.]*://(?:\\w+|(?:www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,32}\\.[a-zA-Z0-9()]{1,6})\\b(?:[-a-zA-Z0-9@:%_+.~#?&//=]{0,100})/[.]{3}
+      scope: string.regexp.url-pattern.inox
+      # todo
+
+    # urls
+    - match: "[a-zA-Z][-a-zA-Z0-9+]*//(?:\\w+|(?:www[.])?[-a-zA-Z0-9@:%._+~#=]{1,32}[.][a-zA-Z0-9()]{1,6})[-a-zA-Z0-9@:%_+.~#?&//=]*([{])"
+      captures:
+        1: punctuation.definition.template-expression.begin.inox
+      push: url-interpolation
+
+    - match: (@[a-zA-Z0-9_-]+)(/[-a-zA-Z0-9@:%_+.~#?&//=]*)?(\{)
+      captures:
+        1: variable.inox
+        2: string.unquoted.inox
+        3: punctuation.definition.template-expression.begin.inox
+      push: url-interpolation
+
+    - match: "[a-zA-Z][-a-zA-Z0-9+]*://(?:\\w+|(?:www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,32}\\.[a-zA-Z0-9()]{1,6})\\b(?:[-a-zA-Z0-9@:%_+.~#?&//=]{0,100})"
+      scope: string.unquoted.url.inox
+
+    - match: "[a-zA-Z][-a-zA-Z0-9+]*://(?:\\w+|(?:www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,32}\\.[a-zA-Z0-9()]{1,6})\\b(?:[-a-zA-Z0-9@:%_+.~#?&//=]{0,100})"
+      scope: string.unquoted.url.inox
+
+    - match: (@[a-zA-Z0-9_-]+)/(?:[-a-zA-Z0-9@:%_+.~#?&//=]{0,100})
+      scope: string.unquoted.url.inox
+
+    - match: "[a-zA-Z][-a-zA-Z0-9+]*://"
+      scope: string.unquoted.scheme.inox
+
+    # fn declaration
+    - match: (\bfn)\b\s+(\w+)\s*\(([^\)]+)\)
+      captures:
+        1: keyword.other.inox
+        2: entity.name.function.inox
+        # todo
+
+    # variables
+    - match: "[$][a-zA-Z-]*\b"
+      scope: variable.inox
+
+    - match: "[$][$][a-zA-Z-]*\b"
+      scope: variable.inox
+
+    # numbers
+    - match: \b0x[a-fA-F0-9]+
+      scope: constant.numeric.inox
+
+    - match: "[0-9][0-9e.]*[a-zA-Z]+(/[a-zA-Z]+\b)?"
+      scope: constant.numeric.inox
+
+    - match: "(?x) # turn on extended mode\n (?:\n    0       # a zero\n    |       # ...or...\n    [1-9_]   # a 1-9 character\n    \\d*     # followed by zero or more digits\n  )\n  (?:\n    (?:\n      \\.    # a period\n      \\d+   # followed by one or more digits\n    )?\n    (?:\n      [eE]  # an e character\n      [+-]? # followed by an option +/-\n      \\d+   # followed by one or more digits\n    )?      # make exponent optional\n  )?        # make decimal portion optional"
+      scope: constant.numeric.inox
+
+    # constants
+
+    - match: \b(nil|true|false)\b
+      scope: constant.language.inox
+
+    # property name
+    - match: (?<![a-zA-Z0-9_\"')\s\].-])\.[a-zA-Z_][a-zA-Z0-9_-]*\b
+      scope: constant.inox
+
+    # comments
+
+    - match: "#[ \t!]"
+      push: single-line-comment
+
+    # host patterns
+    - match: \%([a-zA-Z][-a-zA-Z0-9+.]*)?:\/\/[*]+([.][-a-zA-Z0-9.*]*)?(:[0-9]{1,4})?
+      scope: string.regexp.inox
+    - match: \%([a-zA-Z][-a-zA-Z0-9+.]*)?:\/\/([-a-zA-Z0-9.*]*)[.][*]+(:[0-9]{1,4})?
+      scope: string.regexp.inox
+
+    # hosts
+    - match: ([a-zA-Z][-a-zA-Z0-9+.]*)?:\/\/[-a-zA-Z0-9.]+(:[0-9]{1,4})?(?!\*)
+      scope: string.other.inox
+
+    # path patterns
+    - match: \%\.{0,2}/[-a-zA-Z0-9_+/.*?\[\]]*
+      scope: string.regexp.inox
+    - match: \%\.{0,2}/[-a-zA-Z0-9_+@/.]*(\{)
+      captures:
+        1: punctuation.definition.template-expression.begin
+      push: path-pattern-interpolation
+
+    # paths
+    - match: \.{0,2}/[-a-zA-Z0-9_+@/.]*
+      scope: string.unquoted.inox
+
+    # regexes
+    - match: '%`'
+      push: regexp
+
+    # flags
+    - match: --?[a-zA-Z_-]+\b
+      scope: string.unquoted.inox
+
+    # named patterns
+    - match: (?<!\w)%[a-zA-Z_][a-zA-Z0-9_-]*\b
+      scope: entity.name.type.inox
+
+    # identifiers
+    - match: \#[a-zA-Z_][a-zA-Z0-9_-]*\b
+      scope: constant.character.inox
+
+    - match: "[a-zA-Z_][a-zA-Z0-9_-]*\\b"
+      scope: variable.other.inox
+
+    # lists
+    - match: '\['
+      scope: punctuation.begin.bracket.inox
+      push: list
+
+    # objects
+    - match: '\{'
+      scope: unctuation.begin.bracket.curly.inox
+      push: object
+
+  string:
+    - meta_scope: string.quoted.double.inox
+    - match: \\.
+      scope: constant.character.escape.inox
+    - match: '"'
+      pop: true
+
+  rune:
+    - meta_scope: string.quoted.single.inox
+    - match: (\\([0-7]{3}|[abfnrtv\'\"])|.)(?=')
+      scope: constant.other.rune.go
+    - match: "[^']+"
+      scope: invalid.illegal.unknown-rune.inox
+    - match: "'"
+      pop: true
+
+  single-line-comment:
+    - meta_scope: punctuation.definition.comment.inox
+    - match: "\n"
+      pop: true
+
+  regexp:
+    - meta_scope: string.regexp.inox
+    - match: '`'
+      pop: true
+
+  url-interpolation:
+    - include: main
+    - match: '\}'
+      scope: punctuation.definition.template-expression.end
+
+  path-pattern-interpolation:
+    - include: main
+    - match: '\}'
+      scope: punctuation.definition.template-expression.end
+
+  list:
+    - include: main
+    - match: '\]'
+      scope: punctuation.end.bracket
+      pop: true
+
+  object:
+    - include: main
+    - match: '\}'
+      scope: punctuation.end.bracket.curly.inox
+      pop: true
+
+  parenthesized-call:
+    - match: \b([a-zA-Z_][a-zA-Z0-9_-]*!?)(\()
+      captures:
+        1: variable.function.inox
+        2: punctuation.definition.begin.bracket.round.inox
+      set: parenthesized-call-arguments
+
+  parenthesized-call-arguments:
+    - include: main
+    - match: \)
+      scope: punctuation.definition.end.bracket.round
+      pop: true
+
+  unparenthesized-call:
+    - match: (?:^|\|)[ \t]*([a-zA-Z_][a-zA-Z0-9_-]*)[ \t]+(?=[^=\s])
+      set: unparenthesized-call-arguments
+
+    - match: (?:^|\|)[ \t]*([a-zA-Z0-9_.-]+\.)([a-zA-Z][a-zA-Z0-9_-]*)[ \t]+(?![=])
+      set: unparenthesized-call-arguments
+
+  unparenthesized-call-arguments:
+    - include: main
+    - match: '\n'
+      pop: true
