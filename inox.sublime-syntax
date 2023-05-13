@@ -169,8 +169,26 @@ contexts:
 
     # objects
     - match: '\{'
-      scope: unctuation.begin.bracket.curly.inox
+      scope: punctuation.begin.bracket.curly.inox
       push: object
+
+    # xml tags
+    - match: (<)([a-zA-Z_][a-zA-Z0-9_-]*)(?=[ \t]*$|[ \t]+([a-zA-Z_][a-zA-Z0-9_-]*=|[a-zA-Z_][a-zA-Z0-9_-]*([ \t]|$)))
+      captures:
+        1: punctuation.definition.tag.begin.inox
+        2: entity.name.tag.inox
+
+    - match: (<)([a-zA-Z_][a-zA-Z0-9_-]*)(?=[ \t]*[>]|[ \t]+([a-zA-Z_][a-zA-Z0-9_-]*=|[a-zA-Z_][a-zA-Z0-9_-]*([ \t]|>)))
+      captures:
+        1: punctuation.definition.tag.begin.inox
+        2: entity.name.tag.inox
+      push: xml-opening-tag
+
+    - match: (</)([a-zA-Z_][a-zA-Z0-9_-]*)[ \t]*(>)?
+      captures:
+        1: punctuation.definition.tag.begin.inox
+        2: entity.name.tag.inox
+        3: punctuation.definition.tag.end.inox
 
   string:
     - meta_scope: string.quoted.double.inox
@@ -243,4 +261,15 @@ contexts:
   unparenthesized-call-arguments:
     - include: main
     - match: '\n'
+      pop: true
+
+
+  xml-opening-tag:
+    - include: main
+    - match: '>'
+      scope: punctuation.definition.tag.end.inox
+      pop: true
+
+    - match: '$'
+      scope: punctuation.definition.tag.end.inox
       pop: true
